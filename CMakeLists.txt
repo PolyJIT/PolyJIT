@@ -3,21 +3,40 @@ cmake_minimum_required(VERSION 3.2)
 
 include(ExternalProject)
 
-set(ISL_GIT "https://github.com/PolyJIT/isl.git")
-set(ISL_CPP_GIT "https://github.com/PolyJIT/isl-cpp.git")
-set(ISL_INSTALL_ROOT "" CACHE PATH "Root of ISL install.")
-if( NOT EXISTS ${ISL_INSTALL_ROOT}/include/isl )
-  message("ISL_INSTALL_ROOT (${ISL_INSTALL_ROOT}) is not a valid ISL installation.")
-  message("Get isl @ ${ISL_GIT}")
-  message("Get isl-cpp @ ${ISL_CPP_GIT}")
-  message(FATAL_ERROR  "Please provide isl & isl-cpp via ISL_INSTALL_ROOT")
-endif(NOT EXISTS ${ISL_INSTALL_ROOT}/include/isl)
+set(POLYJIT_PROJECT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(POLYJIT_BUILD_DIR "${POLYJIT_PROJECT_DIR}/build")
+set(POLYJIT_PREFIX_DIR "${POLYJIT_PROJECT_DIR}/prefix")
+
+set(ISL_SOURCE_DIR "${POLYJIT_PROJECT_DIR}/isl")
+
+ExternalProject_Add(isl
+  GIT_REPOSITORY git@github.com:PolyJIT/isl.git
+  GIT_TAG master
+  STEP_TARGETS build install
+  INDEPENDENT_STEP_TARGETS download
+  SOURCE_DIR "${ISL_SOURCE_DIR}"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/isl"
+  PREFIX "${POLYJIT_PREFIX_DIR}/isl"
+  CONFIGURE_COMMAND ${ISL_SOURCE_DIR}/configure --prefix=${CMAKE_INSTALL_PREFIX}
+  BUILD_COMMAND  make
+  INSTALL_COMMAND make install
+  )
+
+ExternalProject_Add_Step(isl autoconf
+  COMMAND ./autogen.sh
+  WORKING_DIRECTORY ${ISL_SOURCE_DIR}
+  DEPENDEES download
+  DEPENDERS configure
+  )
 
 ExternalProject_Add(llvm
   GIT_REPOSITORY git@github.com:PolyJIT/llvm.git
   GIT_TAG master
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
+  PREFIX "${POLYJIT_PREFIX_DIR}/llvm"
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
@@ -35,6 +54,9 @@ ExternalProject_Add(clang
   EXCLUDE_FROM_ALL 1
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/clang"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/clang"
+  PREFIX "${POLYJIT_PREFIX_DIR}/clang"
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
@@ -48,6 +70,9 @@ ExternalProject_Add(polly
   GIT_TAG devel
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polly"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/polly"
+  PREFIX "${POLYJIT_PREFIX_DIR}/polly"
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
@@ -61,11 +86,14 @@ set(POLLY_INSTALL_ROOT ${BINARY_DIR})
 set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(polli
-  DEPENDS llvm polly clang 
+  DEPENDS llvm polly clang isl
   GIT_REPOSITORY git@github.com:PolyJIT/polli.git
   GIT_TAG next
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polli"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/polli"
+  PREFIX "${POLYJIT_PREFIX_DIR}/polli"
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
