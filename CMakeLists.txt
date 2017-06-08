@@ -19,8 +19,8 @@ set(POLYJIT_PREFIX_DIR "${POLYJIT_PROJECT_DIR}/prefix")
 set(ISL_SOURCE_DIR "${POLYJIT_PROJECT_DIR}/isl")
 
 ExternalProject_Add(isl
-  GIT_REPOSITORY git@github.com:PolyJIT/isl.git
-  GIT_TAG master
+  GIT_REPOSITORY https://github.com/PolyJIT/isl.git
+  GIT_TAG isl-0.16.1-cpp
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
   SOURCE_DIR "${ISL_SOURCE_DIR}"
@@ -39,7 +39,7 @@ ExternalProject_Add_Step(isl autoconf
   )
 
 ExternalProject_Add(llvm
-  GIT_REPOSITORY git@github.com:PolyJIT/llvm.git
+  GIT_REPOSITORY https://github.com/PolyJIT/llvm.git
   GIT_TAG master
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
@@ -57,7 +57,7 @@ set(LLVM_INSTALL_ROOT ${BINARY_DIR})
 
 ExternalProject_Add(clang
   DEPENDS llvm
-  GIT_REPOSITORY git@github.com:PolyJIT/clang.git
+  GIT_REPOSITORY https://github.com/PolyJIT/clang.git
   GIT_TAG master
   EXCLUDE_FROM_ALL 1
   STEP_TARGETS build install
@@ -73,7 +73,7 @@ ExternalProject_Add(clang
 
 ExternalProject_Add(polly
   DEPENDS llvm
-  GIT_REPOSITORY git@github.com:PolyJIT/polly.git
+  GIT_REPOSITORY https://github.com/PolyJIT/polly.git
   GIT_TAG devel
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
@@ -93,7 +93,7 @@ set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(polli
   DEPENDS llvm polly clang isl
-  GIT_REPOSITORY git@github.com:PolyJIT/polli.git
+  GIT_REPOSITORY https://github.com/PolyJIT/polli.git
   GIT_TAG next
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
