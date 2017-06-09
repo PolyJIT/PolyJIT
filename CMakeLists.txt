@@ -74,7 +74,7 @@ ExternalProject_Add(clang
 ExternalProject_Add(polly
   DEPENDS llvm
   GIT_REPOSITORY https://github.com/PolyJIT/polly.git
-  GIT_TAG devel
+  GIT_TAG master
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polly"
