@@ -94,7 +94,7 @@ set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 ExternalProject_Add(polli
   DEPENDS llvm polly clang isl
   GIT_REPOSITORY https://github.com/PolyJIT/polli.git
-  GIT_TAG next
+  GIT_TAG master
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polli"
