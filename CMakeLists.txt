@@ -7,7 +7,6 @@ set(POLYJIT_BRANCH_LLVM "upstream" CACHE STRING "Branch of LLVM to use.")
 set(POLYJIT_BRANCH_CLANG "upstream" CACHE STRING "Branch of Clang to use.")
 set(POLYJIT_BRANCH_POLLY "upstream" CACHE STRING "Branch of Polly to use.")
 set(POLYJIT_BRANCH_POLLI "master" CACHE STRING "Branch of Polli to use.")
-#set(POLYJIT_BRANCH_ISL "isl-0.16.1-cpp" CACHE STRING "Branch of ISL to use.")
 
 set(POLYJIT_CMAKE_ARGS
   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -16,67 +15,93 @@ set(POLYJIT_CMAKE_ARGS
   -DCMAKE_EXPORT_COMPILE_COMMANDS=${CMAKE_EXPORT_COMPILE_COMMANDS}
   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
   -DCMAKE_LINKER=${CMAKE_LINKER}
+  -DLLVM_TARGETS_TO_BUILD=X86
+  -DBUILD_SHARED_LIBS=On
 )
 
 set(POLYJIT_PROJECT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(POLYJIT_BUILD_DIR "${POLYJIT_PROJECT_DIR}/build")
 set(POLYJIT_PREFIX_DIR "${POLYJIT_PROJECT_DIR}/prefix")
 
+ExternalProject_Add(clang
+  GIT_REPOSITORY https://github.com/PolyJIT/clang.git
+  GIT_TAG ${POLYJIT_BRANCH_CLANG}
+  GIT_SHALLOW 1
+
+  INDEPENDENT_STEP_TARGETS download
+
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/clang"
+  PREFIX "${POLYJIT_PREFIX_DIR}/clang"
+
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  )
+
+ExternalProject_Get_Property(clang SOURCE_DIR)
+set(CLANG_SOURCE_ROOT ${SOURCE_DIR})
+
+ExternalProject_Add(polly
+  GIT_REPOSITORY https://github.com/PolyJIT/polly.git
+  GIT_TAG ${POLYJIT_BRANCH_POLLY}
+  GIT_SHALLOW 1
+
+  INDEPENDENT_STEP_TARGETS download
+
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polly"
+  PREFIX "${POLYJIT_PREFIX_DIR}/polly"
+
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
+  )
+
+ExternalProject_Get_Property(polly SOURCE_DIR)
+set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
+
 ExternalProject_Add(llvm
+  DEPENDS clang polly
   GIT_REPOSITORY https://github.com/PolyJIT/llvm.git
   GIT_TAG ${POLYJIT_BRANCH_LLVM}
+  GIT_SHALLOW 1
   STEP_TARGETS build install
-  INDEPENDENT_STEP_TARGETS download
+
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm"
   BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
   PREFIX "${POLYJIT_PREFIX_DIR}/llvm"
-  
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-  )
-
-set(LLVM_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
-
-ExternalProject_Add(clang
-  DEPENDS llvm
-  GIT_REPOSITORY https://github.com/PolyJIT/clang.git
-  GIT_TAG ${POLYJIT_BRANCH_CLANG}
-  EXCLUDE_FROM_ALL 1
-  INDEPENDENT_STEP_TARGETS download
-  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm/tools/clang"
-  BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
-  PREFIX "${POLYJIT_PREFIX_DIR}/clang"
-
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-  )
-
-ExternalProject_Add(polly
-  DEPENDS llvm clang
-  GIT_REPOSITORY https://github.com/PolyJIT/polly.git
-  GIT_TAG ${POLYJIT_BRANCH_POLLY}
-  STEP_TARGETS build install 
-  INDEPENDENT_STEP_TARGETS download
-  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm/tools/polly"
-  BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
-  PREFIX "${POLYJIT_PREFIX_DIR}/polly"
   CMAKE_ARGS
-    -DBUILD_SHARED_LIBS=On
-    -DLLVM_INSTALL_ROOT=${LLVM_INSTALL_ROOT}
     ${POLYJIT_CMAKE_ARGS}
   )
 
+ExternalProject_Get_Property(llvm SOURCE_DIR)
+set(LLVM_SOURCE_ROOT ${SOURCE_DIR})
 
-ExternalProject_Get_Property(polly SOURCE_DIR)
+ExternalProject_Add_Step(llvm link_clang
+  COMMAND ln -sf ${CLANG_SOURCE_ROOT} ${LLVM_SOURCE_ROOT}/tools/clang
+  COMMENT "Link clang into LLVM source tree"
+  DEPENDEES download
+  DEPENDERS configure
+  WORKING_DIRECTORY ${LLVM_SOURCE_ROOT}
+)
+
+ExternalProject_Add_Step(llvm link_polly
+  COMMAND ln -sf ${POLLY_SOURCE_ROOT} ${LLVM_SOURCE_ROOT}/tools/polly
+  COMMENT "Link Polly into LLVM source tree"
+  DEPENDEES download
+  DEPENDERS configure
+  WORKING_DIRECTORY ${LLVM_SOURCE_ROOT}
+)
+
+set(LLVM_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
 set(POLLY_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
-set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(polli
-  DEPENDS polly
+  DEPENDS llvm polly
   GIT_REPOSITORY https://github.com/PolyJIT/polli.git
   GIT_TAG ${POLYJIT_BRANCH_POLLI}
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
+
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polli"
   BINARY_DIR "${POLYJIT_BUILD_DIR}/polli"
   PREFIX "${POLYJIT_PREFIX_DIR}/polli"
@@ -84,6 +109,5 @@ ExternalProject_Add(polli
     -DBUILD_SHARED_LIBS=On
     -DLLVM_INSTALL_ROOT=${LLVM_INSTALL_ROOT}
     -DPOLLY_INSTALL_ROOT=${POLLY_INSTALL_ROOT}
-    -DISL_INSTALL_ROOT=${ISL_INSTALL_ROOT}
     ${POLYJIT_CMAKE_ARGS}
   )
