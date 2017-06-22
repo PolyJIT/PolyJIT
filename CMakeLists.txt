@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.2)
 
 include(ExternalProject)
 
-set(POLYJIT_BRANCH_LLVM "upstream" CACHE STRING "Branch of LLVM to use.")
-set(POLYJIT_BRANCH_CLANG "upstream" CACHE STRING "Branch of Clang to use.")
-set(POLYJIT_BRANCH_POLLY "upstream" CACHE STRING "Branch of Polly to use.")
+set(POLYJIT_BRANCH_LLVM "master" CACHE STRING "Branch of LLVM to use.")
+set(POLYJIT_BRANCH_CLANG "master" CACHE STRING "Branch of Clang to use.")
+set(POLYJIT_BRANCH_POLLY "master" CACHE STRING "Branch of Polly to use.")
 set(POLYJIT_BRANCH_POLLI "master" CACHE STRING "Branch of Polli to use.")
 
 set(POLYJIT_CMAKE_ARGS
