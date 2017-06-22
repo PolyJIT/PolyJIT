@@ -3,6 +3,12 @@ cmake_minimum_required(VERSION 3.2)
 
 include(ExternalProject)
 
+set(POLYJIT_BRANCH_LLVM "upstream" CACHE STRING "Branch of LLVM to use.")
+set(POLYJIT_BRANCH_CLANG "upstream" CACHE STRING "Branch of Clang to use.")
+set(POLYJIT_BRANCH_POLLY "upstream" CACHE STRING "Branch of Polly to use.")
+set(POLYJIT_BRANCH_POLLI "master" CACHE STRING "Branch of Polli to use.")
+#set(POLYJIT_BRANCH_ISL "isl-0.16.1-cpp" CACHE STRING "Branch of ISL to use.")
+
 set(POLYJIT_CMAKE_ARGS
   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -16,69 +22,43 @@ set(POLYJIT_PROJECT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(POLYJIT_BUILD_DIR "${POLYJIT_PROJECT_DIR}/build")
 set(POLYJIT_PREFIX_DIR "${POLYJIT_PROJECT_DIR}/prefix")
 
-set(ISL_SOURCE_DIR "${POLYJIT_PROJECT_DIR}/isl")
-
-ExternalProject_Add(isl
-  GIT_REPOSITORY https://github.com/PolyJIT/isl.git
-  GIT_TAG isl-0.16.1-cpp
-  STEP_TARGETS build install
-  INDEPENDENT_STEP_TARGETS download
-  SOURCE_DIR "${ISL_SOURCE_DIR}"
-  BINARY_DIR "${POLYJIT_BUILD_DIR}/isl"
-  PREFIX "${POLYJIT_PREFIX_DIR}/isl"
-  CONFIGURE_COMMAND ${ISL_SOURCE_DIR}/configure --prefix=${CMAKE_INSTALL_PREFIX}
-  BUILD_COMMAND  make
-  INSTALL_COMMAND make install
-  )
-
-ExternalProject_Add_Step(isl autoconf
-  COMMAND ./autogen.sh
-  WORKING_DIRECTORY ${ISL_SOURCE_DIR}
-  DEPENDEES download
-  DEPENDERS configure
-  )
-
 ExternalProject_Add(llvm
   GIT_REPOSITORY https://github.com/PolyJIT/llvm.git
-  GIT_TAG master
+  GIT_TAG ${POLYJIT_BRANCH_LLVM}
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm"
   BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
   PREFIX "${POLYJIT_PREFIX_DIR}/llvm"
-  CMAKE_ARGS
-    -DLLVM_TARGETS_TO_BUILD=X86
-    -DBUILD_SHARED_LIBS=On
-    ${POLYJIT_CMAKE_ARGS}
+  
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
   )
 
-ExternalProject_Get_Property(llvm BINARY_DIR)
-set(LLVM_INSTALL_ROOT ${BINARY_DIR})
+set(LLVM_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
 
 ExternalProject_Add(clang
   DEPENDS llvm
   GIT_REPOSITORY https://github.com/PolyJIT/clang.git
-  GIT_TAG master
+  GIT_TAG ${POLYJIT_BRANCH_CLANG}
   EXCLUDE_FROM_ALL 1
-  STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
-  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/clang"
-  BINARY_DIR "${POLYJIT_BUILD_DIR}/clang"
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm/tools/clang"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
   PREFIX "${POLYJIT_PREFIX_DIR}/clang"
-  CMAKE_ARGS
-    -DBUILD_SHARED_LIBS=On
-    -DLLVM_CONFIG=${LLVM_INSTALL_ROOT}/bin/llvm-config
-    ${POLYJIT_CMAKE_ARGS}
+
+  BUILD_COMMAND ""
+  INSTALL_COMMAND ""
   )
 
 ExternalProject_Add(polly
-  DEPENDS llvm
+  DEPENDS llvm clang
   GIT_REPOSITORY https://github.com/PolyJIT/polly.git
-  GIT_TAG master
-  STEP_TARGETS build install
+  GIT_TAG ${POLYJIT_BRANCH_POLLY}
+  STEP_TARGETS build install 
   INDEPENDENT_STEP_TARGETS download
-  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polly"
-  BINARY_DIR "${POLYJIT_BUILD_DIR}/polly"
+  SOURCE_DIR "${POLYJIT_PROJECT_DIR}/llvm/tools/polly"
+  BINARY_DIR "${POLYJIT_BUILD_DIR}/llvm"
   PREFIX "${POLYJIT_PREFIX_DIR}/polly"
   CMAKE_ARGS
     -DBUILD_SHARED_LIBS=On
@@ -86,15 +66,15 @@ ExternalProject_Add(polly
     ${POLYJIT_CMAKE_ARGS}
   )
 
-ExternalProject_Get_Property(polly BINARY_DIR)
+
 ExternalProject_Get_Property(polly SOURCE_DIR)
-set(POLLY_INSTALL_ROOT ${BINARY_DIR})
+set(POLLY_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
 set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(polli
-  DEPENDS llvm polly clang isl
+  DEPENDS polly
   GIT_REPOSITORY https://github.com/PolyJIT/polli.git
-  GIT_TAG master
+  GIT_TAG ${POLYJIT_BRANCH_POLLI}
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
   SOURCE_DIR "${POLYJIT_PROJECT_DIR}/polli"
