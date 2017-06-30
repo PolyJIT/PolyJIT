@@ -8,6 +8,15 @@ set(POLYJIT_BRANCH_CLANG "master" CACHE STRING "Branch of Clang to use.")
 set(POLYJIT_BRANCH_POLLY "master" CACHE STRING "Branch of Polly to use.")
 set(POLYJIT_BRANCH_POLLI "master" CACHE STRING "Branch of Polli to use.")
 
+set(POLYJIT_REPO_LLVM "https://github.com/PolyJIT/llvm.git" CACHE STRING
+    "Repository of LLVM to use.")
+set(POLYJIT_REPO_CLANG "https://github.com/PolyJIT/clang.git" CACHE STRING
+    "Repository of Clang to use.")
+set(POLYJIT_REPO_POLLY "https://github.com/PolyJIT/polly.git" CACHE STRING
+    "Repository of Polly to use.")
+set(POLYJIT_REPO_POLLI "https://github.com/PolyJIT/polli.git" CACHE STRING
+    "Repository of Polli to use.")
+
 set(POLYJIT_CMAKE_ARGS
   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -25,7 +34,7 @@ set(POLYJIT_BUILD_DIR "${POLYJIT_PROJECT_DIR}/build")
 set(POLYJIT_PREFIX_DIR "${POLYJIT_PROJECT_DIR}/prefix")
 
 ExternalProject_Add(clang
-  GIT_REPOSITORY https://github.com/PolyJIT/clang.git
+  GIT_REPOSITORY ${POLYJIT_REPO_CLANG}
   GIT_TAG ${POLYJIT_BRANCH_CLANG}
   GIT_SHALLOW 1
 
@@ -43,7 +52,7 @@ ExternalProject_Get_Property(clang SOURCE_DIR)
 set(CLANG_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(polly
-  GIT_REPOSITORY https://github.com/PolyJIT/polly.git
+  GIT_REPOSITORY ${POLYJIT_REPO_POLLY}
   GIT_TAG ${POLYJIT_BRANCH_POLLY}
   GIT_SHALLOW 1
 
@@ -62,7 +71,7 @@ set(POLLY_SOURCE_ROOT ${SOURCE_DIR})
 
 ExternalProject_Add(llvm
   DEPENDS clang polly
-  GIT_REPOSITORY https://github.com/PolyJIT/llvm.git
+  GIT_REPOSITORY ${POLYJIT_REPO_LLVM}
   GIT_TAG ${POLYJIT_BRANCH_LLVM}
   GIT_SHALLOW 1
   STEP_TARGETS build install
@@ -98,7 +107,7 @@ set(POLLY_INSTALL_ROOT ${CMAKE_INSTALL_PREFIX})
 
 ExternalProject_Add(polli
   DEPENDS llvm polly
-  GIT_REPOSITORY https://github.com/PolyJIT/polli.git
+  GIT_REPOSITORY ${POLYJIT_REPO_POLLI}
   GIT_TAG ${POLYJIT_BRANCH_POLLI}
   STEP_TARGETS build install
   INDEPENDENT_STEP_TARGETS download
