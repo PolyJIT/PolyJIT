@@ -18,6 +18,8 @@ set(POLYJIT_REPO_POLLY "https://github.com/PolyJIT/polly.git" CACHE STRING
 set(POLYJIT_REPO_POLLI "https://github.com/PolyJIT/polli.git" CACHE STRING
     "Repository of Polli to use.")
 
+set(POLYJIT_PAPI_PREFIX "/usr" CACHE STRING "Installation prefix of libpapi")
+
 set(BUILD_SHARED_LIBS On CACHE BOOL "Enable/Disable shared libs.")
 set(POLYJIT_CMAKE_ARGS
   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
@@ -132,5 +134,8 @@ ExternalProject_Add(polli
     -DBUILD_SHARED_LIBS=On
     -DLLVM_INSTALL_ROOT=${LLVM_INSTALL_ROOT}
     -DPOLLY_INSTALL_ROOT=${POLLY_INSTALL_ROOT}
+    -DPAPI_INCLUDE_DIR=${POLYJIT_PAPI_PREFIX}/include
+    -DPAPI_LIBRARY=${POLYJIT_PAPI_PREFIX}/lib/libpapi.so
+    -DPAPI_INSTALL_ROOT=${POLYJIT_PAPI_PREFIX}
     ${POLYJIT_CMAKE_ARGS}
   )
